@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Multi-Agent Meal Planner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Flask multi-agent demo</p>
+        <h1>One page, three agents, one meal decision.</h1>
+        <p class="lede">
+          The idea agent proposes meals, the critic chooses the easiest option,
+          and the summarizer turns the result into a short recommendation.
+        </p>
+      </section>
+
+      <section class="card highlight">
+        <h2>Agent output</h2>
+        <p>{{ summary }}</p>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h3>Ideas</h3>
+          <ul>
+            {% for idea in ideas %}
+              <li>
+                <strong>{{ idea.name }}</strong>
+                <span>{{ idea.effort }} effort</span>
+                <small>{{ idea.ingredients | join(', ') }}</small>
+              </li>
+            {% endfor %}
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>Critic verdict</h3>
+          <p><strong>Chosen meal:</strong> {{ best.name }}</p>
+          <p><strong>Why:</strong> {{ reason }}</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
