@@ -3,44 +3,274 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Multi-Agent Meal Planner</title>
+    <title>Azure Crest Hotel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script defer src="{{ url_for('static', filename='app.js') }}"></script>
   </head>
   <body>
     <main class="shell">
-      <section class="hero">
-        <p class="eyebrow">Flask multi-agent demo</p>
-        <h1>One page, three agents, one meal decision.</h1>
-        <p class="lede">
-          The idea agent proposes meals, the critic chooses the easiest option,
-          and the summarizer turns the result into a short recommendation.
-        </p>
-      </section>
+      <section class="hero panel">
+        <div class="hero-copy">
+          <p class="eyebrow">Azure Crest Hotel</p>
+          <h1>A hotel web experience powered by multi-agents.</h1>
+          <p class="lede">
+            The welcome agent curates the stay, the room agent recommends your suite,
+            the dining agent composes your order, and the billing agent computes the invoice.
+          </p>
 
-      <section class="card highlight">
-        <h2>Agent output</h2>
-        <p>{{ summary }}</p>
-      </section>
-
-      <section class="grid">
-        <article class="card">
-          <h3>Ideas</h3>
-          <ul>
-            {% for idea in ideas %}
-              <li>
-                <strong>{{ idea.name }}</strong>
-                <span>{{ idea.effort }} effort</span>
-                <small>{{ idea.ingredients | join(', ') }}</small>
-              </li>
+          <div class="hero-points">
+            {% for highlight in highlights %}
+              <span>{{ highlight }}</span>
             {% endfor %}
-          </ul>
+          </div>
+        </div>
+
+        <aside class="hero-card">
+          <p class="eyebrow subtle">Stay summary</p>
+          <div class="stat-grid">
+            <div>
+              <strong>{{ room.name }}</strong>
+              <span>{{ room.description }}</span>
+            </div>
+            <div>
+              <strong>{{ nights }} nights</strong>
+              <span>{{ adults }} guests</span>
+            </div>
+            <div>
+              <strong>${{ quote.total }}</strong>
+              <span>Current invoice total</span>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="grid two-up">
+        <article class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow subtle">Booking</p>
+              <h2>Reserve your stay</h2>
+            </div>
+            <span class="pill">Live quote enabled</span>
+          </div>
+
+          <form method="post" class="booking-form" id="hotel-booking-form" data-hotel-form>
+            <div class="form-grid">
+              <label>
+                Guest name
+                <input name="guest_name" value="{{ guest_name }}" placeholder="Guest name" />
+              </label>
+              <label>
+                Check-in date
+                <input type="date" name="check_in" value="{{ check_in.isoformat() }}" />
+              </label>
+              <label>
+                Nights
+                <input type="number" min="1" name="nights" value="{{ nights }}" data-nights />
+              </label>
+              <label>
+                Guests
+                <input type="number" min="1" name="adults" value="{{ adults }}" />
+              </label>
+              <label class="full-width">
+                Room type
+                <select name="room_type" data-room-select>
+                  {% for room_type in room_types %}
+                    <option value="{{ room_type.slug }}" data-nightly-rate="{{ room_type.nightly_rate }}" {% if room_type.slug == room.slug %}selected{% endif %}>
+                      {{ room_type.name }} - ${{ room_type.nightly_rate }}/night
+                    </option>
+                  {% endfor %}
+                </select>
+              </label>
+            </div>
+
+            <div class="cards menu-cards">
+              {% for room_type in room_types %}
+                <article class="mini-card">
+                  <div class="mini-card-head">
+                    <h3>{{ room_type.name }}</h3>
+                    <strong>${{ room_type.nightly_rate }}</strong>
+                  </div>
+                  <p>{{ room_type.description }}</p>
+                  <ul class="perks">
+                    {% for perk in room_type.perks %}
+                      <li>{{ perk }}</li>
+                    {% endfor %}
+                  </ul>
+                </article>
+              {% endfor %}
+            </div>
+
+            <button class="primary" type="submit">Update booking</button>
+          </form>
         </article>
 
-        <article class="card">
-          <h3>Critic verdict</h3>
-          <p><strong>Chosen meal:</strong> {{ best.name }}</p>
-          <p><strong>Why:</strong> {{ reason }}</p>
+        <article class="panel billing-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow subtle">Billing</p>
+              <h2>Invoice preview</h2>
+            </div>
+            <span class="pill accent">Auto recalculated</span>
+          </div>
+
+          <div class="invoice">
+            <div class="invoice-row">
+              <span>{{ room.name }}</span>
+              <strong data-room-total>${{ quote.room_total }}</strong>
+            </div>
+            <div class="invoice-row">
+              <span>Dining cart</span>
+              <strong data-menu-total>${{ quote.menu_total }}</strong>
+            </div>
+            <div class="invoice-row">
+              <span>Services</span>
+              <strong data-service-total>${{ quote.service_total }}</strong>
+            </div>
+            <div class="invoice-row muted">
+              <span>Taxes</span>
+              <strong data-tax-total>${{ quote.tax }}</strong>
+            </div>
+            <div class="invoice-row muted">
+              <span>Service charge</span>
+              <strong data-service-charge-total>${{ quote.service_charge }}</strong>
+            </div>
+            <div class="invoice-row total">
+              <span>Total</span>
+              <strong data-grand-total>${{ quote.total }}</strong>
+            </div>
+          </div>
+
+          <p class="caption" data-live-summary>
+            Stay from {{ check_in.isoformat() }} to {{ check_out.isoformat() }} for {{ guest_name }}.
+          </p>
         </article>
+      </section>
+
+      <section class="grid three-up">
+        <article class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow subtle">Dining</p>
+              <h2>Hotel menu</h2>
+            </div>
+          </div>
+
+          <div class="menu-list">
+            {% for item in menu_items %}
+              <article class="menu-item">
+                <div>
+                  <p class="category">{{ item.category }}</p>
+                  <h3>{{ item.name }}</h3>
+                  <p>{{ item.description }}</p>
+                </div>
+                <div class="menu-meta">
+                  <strong>${{ item.price }}</strong>
+                  <label>
+                    Qty
+                    <input
+                      type="number"
+                      min="0"
+                      name="qty_{{ item.slug }}"
+                      value="{{ menu_quantities[item.slug] }}"
+                      data-qty
+                      data-unit-price="{{ item.price }}"
+                      form="hotel-booking-form"
+                    />
+                  </label>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow subtle">Add-ons</p>
+              <h2>Extra services</h2>
+            </div>
+          </div>
+
+          <div class="service-list">
+            {% for service in extra_services %}
+              <label class="service-item">
+                <input type="checkbox" name="{{ service.slug }}" {% if service.slug in selected_service_slugs %}checked{% endif %} form="hotel-booking-form" data-service data-service-price="{{ service.price }}" />
+                <span>
+                  <strong>{{ service.name }}</strong>
+                  <small>{{ service.description }}</small>
+                </span>
+                <strong>${{ service.price }}</strong>
+              </label>
+            {% endfor %}
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow subtle">Agents</p>
+              <h2>Concierge notes</h2>
+            </div>
+          </div>
+
+          <div class="agent-stack">
+            <div class="agent-card">
+              <strong>Room agent</strong>
+              <p>{{ room_note }}</p>
+            </div>
+            <div class="agent-card">
+              <strong>Dining agent</strong>
+              <p>{{ dining_note }}</p>
+            </div>
+            <div class="agent-card">
+              <strong>Booking recap</strong>
+              <p>
+                {{ guest_name }} arrives on {{ check_in.strftime('%b %d, %Y') }} and checks out on {{ check_out.strftime('%b %d, %Y') }}.
+              </p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel footer-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow subtle">Receipt</p>
+            <h2>Order summary</h2>
+          </div>
+        </div>
+
+        <div class="receipt">
+          <div>
+            <h3>Room</h3>
+            <p>{{ room.name }} for {{ nights }} night{{ 's' if nights != 1 else '' }}</p>
+          </div>
+          <div>
+            <h3>Dining cart</h3>
+            {% if menu_cart %}
+              <ul class="receipt-list">
+                {% for item in menu_cart %}
+                  <li>{{ item.quantity }} x {{ item.name }} - ${{ item.total }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p>No dishes selected yet.</p>
+            {% endif %}
+          </div>
+          <div>
+            <h3>Services</h3>
+            {% if services %}
+              <ul class="receipt-list">
+                {% for service in services %}
+                  <li>{{ service.name }} - ${{ service.price }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p>No add-ons selected yet.</p>
+            {% endif %}
+          </div>
+        </div>
       </section>
     </main>
   </body>
