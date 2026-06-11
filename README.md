@@ -1,12 +1,14 @@
 # AgenticAI
 
-Minimal sample project for testing git workflows on a feature branch.
+Minimal sample project with a tiny multi-agent meal planner and git workflow demos.
 
-## Git flow
+## Run the multi-agent demo
 
-This repository is set up to test commit, rebase, squash, and push flows locally.
+```bash
+python meal_planner.py
+```
 
-## Run
+## Run the original sample
 
 ```bash
 python app.py
